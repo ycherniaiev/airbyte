@@ -19,7 +19,10 @@
     ]
   },
   "devDependencies": {
-    "cypress": "^6.4.0",
-    "eslint-plugin-cypress": "^2.11.2"
+    "cypress": "^8.7.0",
+    "eslint-plugin-cypress": "^2.11.2",
+    "googleapis": "^89.0.0",
+    "mailslurp-client": "^15.0.1",
+    "node-html-parser": "^5.0.0"
   }
 }

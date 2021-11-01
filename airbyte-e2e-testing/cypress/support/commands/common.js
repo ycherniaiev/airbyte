@@ -1,17 +1,16 @@
 // cypress/support/commands.js
 const { MailSlurp } = require("mailslurp-client");
-import { parse } from "node-html-parser";
 
 const apiKey =
   "caf2ce54b4c3f71bf459491e36c256cdb4662e5a80307f75e63cb560ab8ace28";
 const mailslurp = new MailSlurp({ apiKey });
 
-Cypress.Commands.add("submit", () => {
-  cy.get("button[type=submit]").click();
+Cypress.on("uncaught:exception", (err, runnable) => {
+  return false;
 });
 
-Cypress.Commands.add("fillEmail", (email) => {
-  cy.get("input[name=email]").type(email);
+Cypress.Commands.add("submit", () => {
+  cy.get("button[type=submit]").click();
 });
 
 Cypress.Commands.add("fillTestLocalJsonForm", (name) => {
@@ -93,9 +92,11 @@ Cypress.Commands.add("waitForLatestEmail", (inboxId) => {
   return mailslurp.waitForLatestEmail(inboxId);
 });
 
-Cypress.Commands.add("visitConfirmationLink", (src) => {
-  const root = parse(`<div>${src}</div>`);
-  const url = root.querySelector("a").getAttribute("href");
+Cypress.Commands.add("openSettings", (inboxId) => {
+  cy.get("nav > ul > li").last().click();
+});
 
-  cy.visit(url);
+Cypress.Commands.add("signOut", (inboxId) => {
+  cy.openSettings();
+  cy.get("button").contains("Sign out").click();
 });

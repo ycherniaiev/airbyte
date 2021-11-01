@@ -5,6 +5,9 @@
     "connection.spec.js",
     "destination.spec.js",
     "source.spec.js",
-    "signup.spec.js"
+    "signup.spec.js",
+    "signout.spec.js",
+    "signin.spec.js",
+    "workspace.spec.js"
   ]
 }

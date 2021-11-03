@@ -118,6 +118,7 @@ export const WorkspaceSettingsView: React.FC = () => {
               <Header>
                 <FormattedMessage id="settings.generalSettings.deleteLabel" />
                 <LoadingButton
+                  data-testid="generalSettings.deleteWorkspace"
                   isLoading={removeWorkspace.isLoading}
                   danger
                   onClick={() =>

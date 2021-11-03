@@ -92,6 +92,6 @@ Cypress.Commands.add("waitForLatestEmail", (inboxId) => {
   return mailslurp.waitForLatestEmail(inboxId);
 });
 
-Cypress.Commands.add("openSettings", (inboxId) => {
-  cy.get("nav > ul > li").last().click();
+Cypress.Commands.add("openSettings", () => {
+  cy.get("a[data-testid='sidebar.settings']").click();
 });

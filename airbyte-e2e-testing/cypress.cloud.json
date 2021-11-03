@@ -4,6 +4,8 @@
     "signup.spec.js",
     "signout.spec.js",
     "signin.spec.js",
+    "restorePassword.spec.js",
+    "inviteUser.spec.js",
     "workspace.spec.js"
   ]
 }

@@ -4,7 +4,9 @@ describe("Signin", () => {
   });
 
   it("Sign in flow", () => {
+    // TODO: replace with signUp()
     cy.signIn("iakov.salikov+100@jamakase.com");
-    cy.get("h1").contains("Welcome to Airbyte!");
+
+    cy.get("h1[data-testid='onboarding.welcome']");
   });
 });

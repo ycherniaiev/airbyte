@@ -132,13 +132,22 @@ const SideBar: React.FC = () => {
         </Link>
         <WorkspacePopout>
           {({ onOpen, value }) => (
-            <WorkspaceButton onClick={onOpen}>{value}</WorkspaceButton>
+            <WorkspaceButton
+              data-testid="sidebar.workspaceButton"
+              onClick={onOpen}
+            >
+              {value}
+            </WorkspaceButton>
           )}
         </WorkspacePopout>
         <Menu>
           {workspace.displaySetupWizard ? (
             <li>
-              <MenuItem to={Routes.Onboarding} activeClassName="active">
+              <MenuItem
+                to={Routes.Onboarding}
+                activeClassName="active"
+                data-testid="sidebar.onboarding"
+              >
                 <OnboardingIcon />
                 <Text>
                   <FormattedMessage id="sidebar.onboarding" />
@@ -147,7 +156,11 @@ const SideBar: React.FC = () => {
             </li>
           ) : null}
           <li>
-            <MenuItem to={Routes.Connections} activeClassName="active">
+            <MenuItem
+              to={Routes.Connections}
+              activeClassName="active"
+              data-testid="sidebar.connections"
+            >
               <ConnectionsIcon />
               <Text>
                 <FormattedMessage id="sidebar.connections" />
@@ -155,7 +168,11 @@ const SideBar: React.FC = () => {
             </MenuItem>
           </li>
           <li>
-            <MenuItem to={Routes.Source} activeClassName="active">
+            <MenuItem
+              to={Routes.Source}
+              activeClassName="active"
+              data-testid="sidebar.sources"
+            >
               <SourceIcon />
               <Text>
                 <FormattedMessage id="sidebar.sources" />
@@ -163,7 +180,11 @@ const SideBar: React.FC = () => {
             </MenuItem>
           </li>
           <li>
-            <MenuItem to={Routes.Destination} activeClassName="active">
+            <MenuItem
+              to={Routes.Destination}
+              activeClassName="active"
+              data-testid="sidebar.destinations"
+            >
               <DestinationIcon />
               <Text>
                 <FormattedMessage id="sidebar.destinations" />
@@ -174,7 +195,11 @@ const SideBar: React.FC = () => {
       </div>
       <Menu>
         <li>
-          <MenuItem to={Routes.Credits} activeClassName="active">
+          <MenuItem
+            to={Routes.Credits}
+            activeClassName="active"
+            data-testid="credits.credits"
+          >
             <CreditsIcon icon={faStar} />
             <Text>
               <FormattedMessage id="credits.credits" />
@@ -185,7 +210,11 @@ const SideBar: React.FC = () => {
           </MenuItem>
         </li>
         <li>
-          <MenuLinkItem href={config.ui.docsLink} target="_blank">
+          <MenuLinkItem
+            data-testid="sidebar.docs"
+            href={config.ui.docsLink}
+            target="_blank"
+          >
             <DocsIcon />
             <Text>
               <FormattedMessage id="sidebar.docs" />
@@ -194,6 +223,7 @@ const SideBar: React.FC = () => {
         </li>
         <li>
           <MenuItem
+            data-testid="sidebar.settings"
             to={`${Routes.Settings}${Routes.Account}`}
             activeClassName="active"
             isActive={(_, location) =>

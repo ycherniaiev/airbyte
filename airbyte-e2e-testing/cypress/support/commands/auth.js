@@ -21,6 +21,12 @@ Cypress.Commands.add("fillSignUpForm", (email) => {
   cy.get("input[name=security]").click();
 });
 
+Cypress.Commands.add("selectWorkspaceAfterLogin", () => {
+  cy.wait(1000);
+  cy.get("h5").first().click();
+  cy.wait(5000);
+});
+
 Cypress.Commands.add("signUp", (onDone = () => {}) => {
   cy.visit("/signup");
 
@@ -29,13 +35,10 @@ Cypress.Commands.add("signUp", (onDone = () => {}) => {
     cy.get("button[type=submit]").click();
 
     cy.waitForLatestEmail(inbox.id).then((email) => {
-      cy.wait(1000);
       cy.visitConfirmationLink(email.body);
-      cy.wait(1000);
+      cy.selectWorkspaceAfterLogin();
 
-      cy.get("h5").first().click();
-
-      onDone();
+      onDone(inbox.emailAddress, inbox.id);
     });
   });
 });
@@ -44,19 +47,19 @@ Cypress.Commands.add("signIn", (email) => {
   cy.visit("/login");
   cy.fillSignInForm(email);
   cy.get("button[type=submit]").click();
-  cy.wait(1000);
-  cy.get("h5").first().click();
-  cy.wait(5000);
+  cy.selectWorkspaceAfterLogin();
 });
 
-Cypress.Commands.add("signOut", (inboxId) => {
+Cypress.Commands.add("signOut", () => {
   cy.openSettings();
-  cy.get("button").contains("Sign out").click();
+  cy.get("button[data-testid='button.signout']").click();
 });
 
 Cypress.Commands.add("visitConfirmationLink", (src) => {
+  cy.wait(1000);
   const root = parse(`<div>${src}</div>`);
   const url = root.querySelector("a").getAttribute("href");
 
   cy.visit(url);
+  cy.wait(2500);
 });

@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div>
-      <FormTitle bold>
+      <FormTitle bold data-testid="login.loginTitle">
         <FormattedMessage id="login.loginTitle" />
       </FormTitle>
 
@@ -92,7 +92,11 @@ const LoginPage: React.FC = () => {
             </FieldItem>
             <BottomBlock>
               <>
-                <Link to={Routes.ResetPassword} $light>
+                <Link
+                  to={Routes.ResetPassword}
+                  $light
+                  data-testid="login.forgotPassword"
+                >
                   <FormattedMessage id="login.forgotPassword" />
                 </Link>
                 <LoadingButton type="submit" isLoading={isSubmitting}>

@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://dev-cloud.airbyte.io",
+  "baseUrl": "http://localhost:3000",
   "testFiles": [
     "signup.spec.js",
     "signout.spec.js",

@@ -1,10 +1,6 @@
 {
   "baseUrl": "https://dev-cloud.airbyte.io",
   "testFiles": [
-    "onboarding.spec.js",
-    "connection.spec.js",
-    "destination.spec.js",
-    "source.spec.js",
     "signup.spec.js",
     "signout.spec.js",
     "signin.spec.js",

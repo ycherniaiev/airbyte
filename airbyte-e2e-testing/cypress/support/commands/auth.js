@@ -49,6 +49,11 @@ Cypress.Commands.add("signIn", (email) => {
   cy.wait(5000);
 });
 
+Cypress.Commands.add("signOut", (inboxId) => {
+  cy.openSettings();
+  cy.get("button").contains("Sign out").click();
+});
+
 Cypress.Commands.add("visitConfirmationLink", (src) => {
   const root = parse(`<div>${src}</div>`);
   const url = root.querySelector("a").getAttribute("href");

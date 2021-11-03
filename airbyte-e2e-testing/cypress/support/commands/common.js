@@ -95,8 +95,3 @@ Cypress.Commands.add("waitForLatestEmail", (inboxId) => {
 Cypress.Commands.add("openSettings", (inboxId) => {
   cy.get("nav > ul > li").last().click();
 });
-
-Cypress.Commands.add("signOut", (inboxId) => {
-  cy.openSettings();
-  cy.get("button").contains("Sign out").click();
-});

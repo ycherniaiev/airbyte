@@ -14,6 +14,7 @@ import io.airbyte.integrations.standardtest.source.AbstractSourceDatabaseTypeTes
 import io.airbyte.integrations.standardtest.source.TestDataHolder;
 import io.airbyte.integrations.standardtest.source.TestDestinationEnv;
 import io.airbyte.protocol.models.JsonSchemaPrimitive;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.SQLDialect;
 import org.testcontainers.containers.MySQLContainer;
@@ -77,9 +78,60 @@ public class MySqlSourceDatatypeTest extends AbstractSourceDatabaseTypeTest {
 
   @Override
   protected void initTests() {
+    // bit defaults to bit(1), which is equivalent to boolean
+    addDataTypeTestData(
+        TestDataHolder.builder()
+            .sourceType("bit")
+            .airbyteType(JsonSchemaPrimitive.NUMBER)
+            .addInsertValues("null", "1", "0")
+            .addExpectedValues(null, "true", "false")
+            .build());
+
+    // bit(1) is equivalent to boolean
+    addDataTypeTestData(
+        TestDataHolder.builder()
+            .sourceType("bit")
+            .fullSourceDataType("bit(1)")
+            .airbyteType(JsonSchemaPrimitive.NUMBER)
+            .addInsertValues("null", "1", "0")
+            .addExpectedValues(null, "true", "false")
+            .build());
+
+    // bit(>1) is binary
+    addDataTypeTestData(
+        TestDataHolder.builder()
+            .sourceType("bit")
+            .fullSourceDataType("bit(7)")
+            .airbyteType(JsonSchemaPrimitive.STRING)
+            // 1000001 is binary for A
+            .addInsertValues("null", "b'1000001'")
+            // QQo= is base64 encoding in charset UTF-8 for A
+            .addExpectedValues(null, "QQ==")
+            .build());
+
+    // tinyint without width
     addDataTypeTestData(
         TestDataHolder.builder()
             .sourceType("tinyint")
+            .airbyteType(JsonSchemaPrimitive.NUMBER)
+            .addInsertValues("null", "-128", "127")
+            .addExpectedValues(null, "-128", "127")
+            .build());
+
+    // tinyint(1) is equivalent to boolean
+    addDataTypeTestData(
+        TestDataHolder.builder()
+            .sourceType("tinyint")
+            .fullSourceDataType("tinyint(1)")
+            .airbyteType(JsonSchemaPrimitive.BOOLEAN)
+            .addInsertValues("null", "1", "0")
+            .addExpectedValues(null, "true", "false")
+            .build());
+
+    addDataTypeTestData(
+        TestDataHolder.builder()
+            .sourceType("tinyint")
+            .fullSourceDataType("tinyint(2)")
             .airbyteType(JsonSchemaPrimitive.NUMBER)
             .addInsertValues("null", "-128", "127")
             .addExpectedValues(null, "-128", "127")
@@ -198,14 +250,6 @@ public class MySqlSourceDatatypeTest extends AbstractSourceDatabaseTypeTest {
 
     addDataTypeTestData(
         TestDataHolder.builder()
-            .sourceType("bit")
-            .airbyteType(JsonSchemaPrimitive.NUMBER)
-            .addInsertValues("null", "1", "0")
-            .addExpectedValues(null, "true", "false")
-            .build());
-
-    addDataTypeTestData(
-        TestDataHolder.builder()
             .sourceType("date")
             .airbyteType(JsonSchemaPrimitive.STRING)
             .addInsertValues("null", "'2021-01-01'")
@@ -241,36 +285,50 @@ public class MySqlSourceDatatypeTest extends AbstractSourceDatabaseTypeTest {
         TestDataHolder.builder()
             .sourceType("year")
             .airbyteType(JsonSchemaPrimitive.STRING)
-            .addInsertValues("null", "1997")
-            .addExpectedValues(null, "1997")
+            // MySQL converts values in the ranges '0' - '69' to YEAR value in the range 2000 - 2069
+            // and '70' - '99' to 1970 - 1999.
+            .addInsertValues("null", "1997", "99", "50")
+            .addExpectedValues(null, "1997", "1999", "2050")
             .build());
 
-    addDataTypeTestData(
-        TestDataHolder.builder()
-            .sourceType("varchar")
-            .airbyteType(JsonSchemaPrimitive.STRING)
-            .fullSourceDataType("varchar(256) character set cp1251")
-            .addInsertValues("null", "'тест'")
-            .addExpectedValues(null, "тест")
-            .build());
+    for (final String charType : Set.of("char", "varchar")) {
+      addDataTypeTestData(
+          TestDataHolder.builder()
+              .sourceType(charType)
+              .airbyteType(JsonSchemaPrimitive.STRING)
+              .fullSourceDataType(charType + "(63)")
+              .addInsertValues("null", "'Airbyte'", "'!\"#$%&\\'()*+,-./:;<=>?\\@[\\]^_\\`{|}~'")
+              .addExpectedValues(null, "Airbyte", "!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~")
+              .build());
 
-    addDataTypeTestData(
-        TestDataHolder.builder()
-            .sourceType("varchar")
-            .airbyteType(JsonSchemaPrimitive.STRING)
-            .fullSourceDataType("varchar(256) character set utf16")
-            .addInsertValues("null", "0xfffd")
-            .addExpectedValues(null, "�")
-            .build());
+      addDataTypeTestData(
+          TestDataHolder.builder()
+              .sourceType(charType)
+              .airbyteType(JsonSchemaPrimitive.STRING)
+              .fullSourceDataType(charType + "(63) character set utf16")
+              .addInsertValues("0xfffd")
+              .addExpectedValues("�")
+              .build());
 
-    addDataTypeTestData(
-        TestDataHolder.builder()
-            .sourceType("varchar")
-            .airbyteType(JsonSchemaPrimitive.STRING)
-            .fullSourceDataType("varchar(256)")
-            .addInsertValues("null", "'!\"#$%&\\'()*+,-./:;<=>?\\@[\\]^_\\`{|}~'")
-            .addExpectedValues(null, "!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~")
-            .build());
+      addDataTypeTestData(
+          TestDataHolder.builder()
+              .sourceType(charType)
+              .airbyteType(JsonSchemaPrimitive.STRING)
+              .fullSourceDataType(charType + "(63) character set cp1251")
+              .addInsertValues("'тест'")
+              .addExpectedValues("тест")
+              .build());
+
+      // when charset is binary, return binary in base64 encoding in charset UTF-8
+      addDataTypeTestData(
+          TestDataHolder.builder()
+              .sourceType(charType)
+              .airbyteType(JsonSchemaPrimitive.STRING)
+              .fullSourceDataType(charType + "(7) character set binary")
+              .addInsertValues("'Airbyte'")
+              .addExpectedValues("QWlyYnl0ZQ==")
+              .build());
+    }
 
     addDataTypeTestData(
         TestDataHolder.builder()
@@ -348,7 +406,6 @@ public class MySqlSourceDatatypeTest extends AbstractSourceDatabaseTypeTest {
             .addInsertValues("null", "1", "0", "127", "-128")
             .addExpectedValues(null, "true", "false", "false", "false")
             .build());
-
   }
 
   private String getLogString(final int length) {

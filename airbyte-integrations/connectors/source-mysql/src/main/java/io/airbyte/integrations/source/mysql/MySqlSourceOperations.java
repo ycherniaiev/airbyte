@@ -4,13 +4,17 @@
 
 package io.airbyte.integrations.source.mysql;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mysql.cj.MysqlType;
 import com.mysql.cj.jdbc.result.ResultSetMetaData;
 import com.mysql.cj.result.Field;
+import io.airbyte.commons.json.Jsons;
+import io.airbyte.db.DataTypeUtils;
 import io.airbyte.db.SourceOperations;
 import io.airbyte.db.jdbc.AbstractJdbcCompatibleSourceOperations;
 import io.airbyte.protocol.models.JsonSchemaPrimitive;
+import java.sql.JDBCType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,22 +33,64 @@ public class MySqlSourceOperations extends AbstractJdbcCompatibleSourceOperation
 
     // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-type-conversions.html
     switch (columnType) {
-      case BIT, BOOLEAN -> putBoolean(json, columnName, resultSet, colIndex);
-      case YEAR -> json.put(columnName, resultSet.getDate(colIndex).toString().split("-")[0]);
-      case TINYINT, SMALLINT -> putShortInt(json, columnName, resultSet, colIndex);
-      case INT -> putInteger(json, columnName, resultSet, colIndex);
-      case BIGINT -> putBigInt(json, columnName, resultSet, colIndex);
-      case FLOAT, DOUBLE -> putDouble(json, columnName, resultSet, colIndex);
-      case DECIMAL -> putNumber(json, columnName, resultSet, colIndex);
-      case CHAR, VARCHAR -> putString(json, columnName, resultSet, colIndex);
+      case BIT -> {
+        if (field.getLength() == 1) {
+          // BIT(1) is interpreted as boolean
+          putBoolean(json, columnName, resultSet, colIndex);
+        } else {
+          // BIT(>1)
+          putBinary(json, columnName, resultSet, colIndex);
+        }
+      }
+      case TINYINT, TINYINT_UNSIGNED -> {
+        if (field.getLength() == 1L) {
+          // TINYINT(1)
+          putBoolean(json, columnName, resultSet, colIndex);
+        } else {
+          // TINYINT(>1)
+          putShortInt(json, columnName, resultSet, colIndex);
+        }
+      }
+      case BOOLEAN -> putBoolean(json, columnName, resultSet, colIndex);
+      case SMALLINT, SMALLINT_UNSIGNED, MEDIUMINT, MEDIUMINT_UNSIGNED -> putInteger(json, columnName, resultSet, colIndex);
+      case INT, INT_UNSIGNED -> {
+        if (field.isUnsigned()) {
+          putBigInt(json, columnName, resultSet, colIndex);
+        } else {
+          putInteger(json, columnName, resultSet, colIndex);
+        }
+      }
+      case BIGINT, BIGINT_UNSIGNED -> putBigInt(json, columnName, resultSet, colIndex);
+      case FLOAT, FLOAT_UNSIGNED -> putFloat(json, columnName, resultSet, colIndex);
+      case DOUBLE, DOUBLE_UNSIGNED -> putDouble(json, columnName, resultSet, colIndex);
+      case DECIMAL, DECIMAL_UNSIGNED -> putBigDecimal(json, columnName, resultSet, colIndex);
       case DATE -> putDate(json, columnName, resultSet, colIndex);
+      case DATETIME, TIMESTAMP -> putTimestamp(json, columnName, resultSet, colIndex);
       case TIME -> putTime(json, columnName, resultSet, colIndex);
-      case TIMESTAMP, DATETIME -> putTimestamp(json, columnName, resultSet, colIndex);
-      case BLOB, BINARY, VARBINARY -> putBinary(json, columnName, resultSet, colIndex);
+      case YEAR -> {
+        // the returned year value is java.sql.Date with the date set to January 1st, at midnight
+        final String year = resultSet.getDate(colIndex).toString().split("-")[0];
+        json.put(columnName, DataTypeUtils.returnNullIfInvalid(() -> year));
+      }
+      case CHAR, VARCHAR -> {
+        if (field.isBinary()) {
+          // when character set is binary, the returned value is binary
+          putBinary(json, columnName, resultSet, colIndex);
+        } else {
+          putString(json, columnName, resultSet, colIndex);
+        }
+      }
+      case TINYBLOB, BLOB, MEDIUMBLOB, LONGBLOB, BINARY, VARBINARY -> putBinary(json, columnName, resultSet, colIndex);
+      case TINYTEXT, TEXT, MEDIUMTEXT, LONGTEXT, ENUM, SET, JSON -> putString(json, columnName, resultSet, colIndex);
+      case GEOMETRY -> json.put(columnName, Jsons.serialize(resultSet.getObject(colIndex)));
+      case NULL -> json.set(columnName, NullNode.instance);
       default -> putDefault(json, columnName, resultSet, colIndex);
     }
   }
 
+  /**
+   * MySQL boolean is equivalent to tinyint(1).
+   */
   @Override
   protected void putBoolean(final ObjectNode node, final String columnName, final ResultSet resultSet, final int index) throws SQLException {
     node.put(columnName, resultSet.getInt(index) == 1);

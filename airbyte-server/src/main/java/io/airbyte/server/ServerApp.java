@@ -46,7 +46,6 @@ import io.airbyte.server.errors.InvalidJsonInputExceptionMapper;
 import io.airbyte.server.errors.KnownExceptionMapper;
 import io.airbyte.server.errors.NotFoundExceptionMapper;
 import io.airbyte.server.errors.UncaughtExceptionMapper;
-import io.airbyte.server.version_mismatch.VersionMismatchServer;
 import io.airbyte.validation.json.JsonValidationException;
 import io.airbyte.workers.temporal.TemporalClient;
 import io.airbyte.workers.temporal.TemporalUtils;
@@ -246,7 +245,7 @@ public class ServerApp implements ServerRunnable {
     LOGGER.info("Ran Flyway migrations...");
 
     jobPersistence.setVersion(airbyteVersion.serialize());
-    
+
     configPersistence.loadData(seed);
     LOGGER.info("Loaded seed data...");
 

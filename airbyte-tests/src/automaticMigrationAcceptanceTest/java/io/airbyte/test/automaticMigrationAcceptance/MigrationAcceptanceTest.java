@@ -149,7 +149,8 @@ public class MigrationAcceptanceTest {
   }
 
   /**
-   * Allows the test to listen for a specific log line so that the test can end as soon as that log line has been encountered.
+   * Allows the test to listen for a specific log line so that the test can end as soon as that log
+   * line has been encountered.
    */
   private static class WaitForLogLine {
 
